@@ -19,7 +19,7 @@ import org.apache.camel.processor.aggregate.AggregationStrategy;
  * Before you run the example copy content of main/resources/camel to c:/temp/camel or change appropriately path in line 79
  */
 
-public class AggregateReorderAndSplitWithBody {
+public class AggregateReorderAndSplit {
 
     //NOTE: I am using a small batch value as I do not want to create too many dummy files and I still want to test behavior properly
     private static final int BATCH_SIZE = 2;
