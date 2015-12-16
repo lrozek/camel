@@ -16,15 +16,13 @@ import org.apache.camel.processor.aggregate.AggregationStrategy;
 
 /**
  * IMPORTANT
- * Before you run the example copy content of main/resources/camel to c:/temp/camel or change appropriately path in line 81
+ * Before you run the example copy content of main/resources/camel to c:/temp/camel or change appropriately path in line 79
  */
 
 public class AggregateReorderAndSplitWithBody {
 
     //NOTE: I am using a small batch value as I do not want to create too many dummy files and I still want to test behavior properly
     private static final int BATCH_SIZE = 2;
-    private static final String DUMMY_AGGREGATE_ID_HEADER_NAME = "DummyAggregateId";
-    private static final Long DUMMY_AGGREGATE_ID_HEADER_VALUE = Long.valueOf( 1 );
     private static final int NUM_OF_MESSAGES_AFTER_WHICH_AGGREGATOR_WILL_RUN = 1000;
     private static final int TIMEOUT_AFTER_WHICH_AGGREGATOR_WILL_RUN = 1000;
 
@@ -86,20 +84,10 @@ public class AggregateReorderAndSplitWithBody {
                 //to achieve this we will aggregate X messages, resort them in batches, then split them again into separate messages, so they can be processed as before
                 //in this way this approach aims to be transparent to currently existing processing code
                 
-                //first we need to set some header on each Message that will allow for aggregating them together (all Messages with same header will be aggregated into one)
-                //FIXME: this is in general not necessary as we want to always group all Messages, but version of aggregate where we do not pass correlactionExpression did not work for me for whatever reason
-                //so we are left with setting some "dummy" header value to all Messages
-                .process( new Processor() {
-                    @Override
-                    public void process( Exchange exchange ) throws Exception {
-                        exchange.getIn().setHeader( DUMMY_AGGREGATE_ID_HEADER_NAME, DUMMY_AGGREGATE_ID_HEADER_VALUE );
-                    }
-                })
-                
                 //FIXME: as aggregator is stateful we should connect it to some persistence mechanism
-                //aggregation itself - we aggregate together Messages that have same DUMMY_AGGREGATE_ID_HEADER_NAME (which in our case are all messages)
+                //aggregation itself - we aggregate together all Messages using a dummy constant predicate "always"
                 //using aggregation strategy CombineResultsAggregationStrategym which just simply adds up all Messages together in a list
-                .aggregate( header(DUMMY_AGGREGATE_ID_HEADER_NAME), new CombineResultsAggregationStrategy() )
+                .aggregate( constant( "always" ), new CombineResultsAggregationStrategy() )
                   //this parameter is important - it tells aggregator a number of Messages after which it should run aggregation
                   //if value is too small (e.g. '1') then batching is useless, as each Message will be processed by its own
                   //aggregator will not start processing messages until NUM_OF_MESSAGES_AFTER_WHICH_AGGREGATOR_WILL_RUN is achieved (unless timeout is also set - see below)
